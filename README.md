@@ -1,8 +1,3 @@
-Log In to Cluster
-```
-Run your connection string in the command line
-```
-
 To see all databases
 
 ```
@@ -257,21 +252,6 @@ db.listingsAndReviews.find({
     'beds':1
 })
 ```
-//founded between 1900 to 2010
-db.companies.find({
-    'founded_year': {
-        '$gte': 1900
-    },
-    'founded_year':{
-        '$lte': 2010
-    }
-},{
-    'name':1,
-    'founded_year':1
-}
-)
-```
-
 
 Show all the listings not from Brazil or Canada
 
@@ -285,5 +265,101 @@ db.listingsAndReviews.find({
 },{
     'name':1,
     'address.country':1
+})
+```
+## Find by nested elements
+db.transactions.find({
+    'transactions.transaction_code':'buy'
+},{
+    'transactions': {
+        '$elemMatch': {
+            'transaction_code':'buy'
+        }
+    }
+}).pretty();
+
+# How to create our own database
+
+When we `use` a non-existent database, Mongo will assume that we want to create a new database
+
+```
+use animal_shelter
+```
+
+Mongo will assume the database exists. However the new database won't be saved until
+we add a new collection to do it.
+
+## How to add a collection to a database
+
+By inserting a new document to a collection, we create it.
+
+```
+db.animals.insert({
+    "name":"Fluffy",
+    "age":3,
+    "breed":"Golden Retriever",
+    "species":"Dog"
+})
+```
+
+## Insert many into a document
+
+
+```
+db.animals.insertMany([
+    {
+        'name':'Muffin',
+        'age':10,
+        'breed':'Orange Tabby',
+        'species':'Cat'
+    },
+    {
+        'name':'Carrots',
+        'age': 2.5,
+        'breed':'Bunny',
+        'species':'Bunny'
+    }
+])
+```
+
+
+## Update a document: PATCH
+
+Update function will match the document by the first critera, and then the second critera is what to change/add to the matched document
+```
+db.animals.update({
+    '_id':ObjectId('60a4c1cc5baac29f72a7e209')
+},{
+    '$set':{
+        'age':4,
+        'house_broken':true
+    }
+})
+```
+
+## The PUT method (aka. the Prestige method)
+```
+db.animals.update({
+    '_id':ObjectId('60a4c2eb5baac29f72a7e20b')
+},{
+    'name':'Carrots',
+    'age':2.5,
+    'breed': 'Norwegian Forest Cat',
+    'species':'Cat'
+})
+```
+
+## Update many
+
+Increase the age of all cats by 1. The updateMany function can change ALL the documents that matches
+the critera in the first parameter.
+
+```
+db.animals.updateMany({
+    'species':'Cat'
+},{
+    '$inc': {
+        'age': 1
+    }
 })
 ```
