@@ -1,59 +1,269 @@
-![CI logo](https://codeinstitute.s3.amazonaws.com/fullstack/ci_logo_small.png)
+To see all databases
 
-Welcome USER_NAME,
+```
+show databases
+```
 
-This is the Code Institute student template for Gitpod. We have preinstalled all of the tools you need to get started. You can safely delete this README.md file, or change it for your own project. Please do read it at least once, though! It contains some important information about Gitpod and the extensions we use.
+To set the current active database
 
-## Gitpod Reminders
+```
+use sample_airbnb
+```
 
-To run a frontend (HTML, CSS, Javascript only) application in Gitpod, in the terminal, type:
+To display all the collections in active database
 
-`python3 -m http.server`
+```
+show collections
+```
 
-A blue button should appear to click: _Make Public_,
+To check the current active database
+```
+db
+```
 
-Another blue button should appear to click: _Open Browser_.
+Show all the documents in a collection
 
-To run a backend Python file, type `python3 app.py`, if your Python file is named `app.py` of course.
+```
+db.<name of collection>.find()
 
-A blue button should appear to click: _Make Public_,
+// display all documents from the listingsAndReviews collection
+db.listingsAndReviews.find()
+```
+To beautify (that is, to format) the output:
+```
+db.listingsAndReviews.find().pretty()
+```
+## Projecting
+To extract only certain keys from the document is known as
+`projecting`
 
-Another blue button should appear to click: _Open Browser_.
+Show only the name, address and beds key from each document
+```
+db.listingsAndReviews.find({},{
+    'name': 1,
+    'address': 1,
+    'beds':1
+}).pretty()
+```
 
-In Gitpod you have superuser security privileges by default. Therefore you do not need to use the `sudo` (superuser do) command in the bash terminal in any of the lessons.
+# Limit
+Restrict the maximum number of results to the first nth results:
 
-To log into the Heroku toolbelt CLI:
+```
+db.listingsAndReviews.find({},{
+    'name': 1,
+    'beds':1,
+    'address':1,
+    'minimum_nights':1,
+    'maximum_nights':1
+}).pretty().limit(5)
+```
 
-1. Log in to your Heroku account and go to *Account Settings* in the menu under your avatar.
-2. Scroll down to the *API Key* and click *Reveal*
-3. Copy the key
-4. In Gitpod, from the terminal, run `heroku_config`
-5. Paste in your API key when asked
+# Project keys of a sub-document (aka embedded document)
+```
+db.listingsAndReviews.find({},{
+    'name':1,
+    'beds':1,
+    'address.country':1
+}).pretty().limit(5)
+```
+# Querying
 
-You can now use the `heroku` CLI program - try running `heroku apps` to confirm it works. This API key is unique and private to you so do not share it. If you accidently make it public then you can create a new one with _Regenerate API Key_.
+## Search by an exact value
 
-## Updates Since The Instructional Video
+Find all the listings where they have exactly **two** beds
 
-We continually tweak and adjust this template to help give you the best experience. Here is the version history:
+```
+db.listingsAndReviews.find({
+    'beds': 2
+}, {
+    'name':1,
+    'beds':1
+})
+```
+Find all listings where they are in Brazil and the number of beds
+is exactly 2
 
-**May 10 2021:** Added `heroku_config` script to allow Heroku API key to be stored as an environment variable.
+```
+db.listingsAndReviews.find({
+    'beds':2,
+    'address.country':'Brazil'
+},{
+    'beds':1,
+    'name':1,
+    'address.country':1
+}).pretty()
+```
+## Find by range of values or inequality
 
-**April 7 2021:** Upgraded the template for VS Code instead of Theia.
+Find all the listings that have more than 3 beds:
+```
+db.listingsAndReviews.find({
+    'beds': {
+        '$gt':3
+    },
+    'address.country':'Brazil'
+}, {
+    'name':1,
+    'beds':1,
+    'address.country':1
+})
+```
+Use `$gte` for **greater than or equal** and `$lt` for **lesser than** and
+`$lte` for **lesser than or equal** and `$ne` for **not equal**
 
-**October 21 2020:** Versions of the HTMLHint, Prettier, Bootstrap4 CDN and Auto Close extensions updated. The Python extension needs to stay the same version for now.
+Find all listings that have more than 3 beds but less than 10 beds
+```
+db.listingsAndReviews.find({
+    'beds': {
+        '$gt': 3,
+        '$lt': 10
+    },
+    'address.country':'Brazil'
+}, {
+    'beds':1,
+    'address.country':1
+})
+```
 
-**October 08 2020:** Additional large Gitpod files (`core.mongo*` and `core.python*`) are now hidden in the Explorer, and have been added to the `.gitignore` by default.
+## Find by elements in an array
 
-**September 22 2020:** Gitpod occasionally creates large `core.Microsoft` files. These are now hidden in the Explorer. A `.gitignore` file has been created to make sure these files will not be committed, along with other common files.
+Show all the listings with `Kitchen` inside the array of amenities
 
-**April 16 2020:** The template now automatically installs MySQL instead of relying on the Gitpod MySQL image. The message about a Python linter not being installed has been dealt with, and the set-up files are now hidden in the Gitpod file explorer.
+```
+db.listingsAndReviews.find({
+    'amenities':'Kitchen'
+}, {
+    'name':1,
+    'amenities':1
+}).pretty()
+```
 
-**April 13 2020:** Added the _Prettier_ code beautifier extension instead of the code formatter built-in to Gitpod.
+Find all listings that  have either **TV** or **Cable TV**
 
-**February 2020:** The initialisation files now _do not_ auto-delete. They will remain in your project. You can safely ignore them. They just make sure that your workspace is configured correctly each time you open it. It will also prevent the Gitpod configuration popup from appearing.
+```
+db.listingsAndReviews.find({
+    'amenities': {
+        '$in':['TV', 'Cable TV']
+    }
+}, {
+    'name':1,
+    'amenities':1
+}).pretty()
+```
 
-**December 2019:** Added Eventyret's Bootstrap 4 extension. Type `!bscdn` in a HTML file to add the Bootstrap boilerplate. Check out the <a href="https://github.com/Eventyret/vscode-bcdn" target="_blank">README.md file at the official repo</a> for more options.
+Find all listings that have ALL of specified amenities. For example, all listings that have **Kitchen** and **Oven**. 
 
----
+```
+db.listingsAndReviews.find({
+    'amenities':{
+        '$all':['Kitchen', 'Oven']
+    }
+},{
+    'name':1,
+    'amenities':1
+}).pretty()
+```
 
-Happy coding!
+Find all the listings that have "Internet" and "Cable TV"
+
+```
+db.listingsAndReviews.find({
+    'amenities':{
+        '$all':['Internet', 'Cable TV']
+    }
+},{
+    'name':1,
+    'amenities':1
+})
+```
+
+## Find documents by their ID
+```
+use sample_mflix;
+db.movies.find({
+    '_id':ObjectId("573a1390f29313caabcd5b9a")
+}).pretty()
+```
+## Find by Date
+To specify a date, we muse the `ISODate` object
+
+```
+use sample_airbnb;
+db.listingsAndReviews.find({
+    'first_review':{
+        '$gte': ISODate('2018-01-01')
+    }
+},{
+    'name':1,
+    'first_review':1
+})
+```
+
+## Search by string patterns and to ignore case
+Find all listings that the substring `Spacious` inside and ignore case
+
+```
+db.listingsAndReviews.find({
+    'name':{
+        '$regex':'apartment for \[0-9]',
+        '$options':'i'
+    }
+},{
+    'name':1
+})
+```
+
+Find all listings which name includes the pattern "apartment for x" where x is a number
+
+
+```
+db.listingsAndReviews.find({
+    'name':{
+        '$regex':'apartment for \[0-9]',
+        '$options':'i'
+    }
+},{
+    'name':1
+})
+```
+
+## Logical operators
+
+`and` is basically just putting the criteria in the same object.
+
+Find all the listings from Brazil or Canada with 3 or more beds
+
+```
+db.listingsAndReviews.find({
+    '$or':[
+        {
+            'address.country':'Brazil'
+        },
+        {
+            'address.country':'Canada',
+            'beds':{
+                '$gte':3
+            }
+        }
+    ]
+}, {
+    'address.country':1,
+    'beds':1
+})
+```
+
+Show all the listings not from Brazil or Canada
+
+```
+db.listingsAndReviews.find({
+    'address.country': {
+        '$not': {
+            '$in':['Brazil', 'Canada']
+        }
+    }
+},{
+    'name':1,
+    'address.country':1
+})
+```
