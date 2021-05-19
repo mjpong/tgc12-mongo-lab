@@ -1,3 +1,8 @@
+Log In to Cluster
+```
+Run your connection string in the command line
+```
+
 To see all databases
 
 ```
@@ -252,6 +257,21 @@ db.listingsAndReviews.find({
     'beds':1
 })
 ```
+//founded between 1900 to 2010
+db.companies.find({
+    'founded_year': {
+        '$gte': 1900
+    },
+    'founded_year':{
+        '$lte': 2010
+    }
+},{
+    'name':1,
+    'founded_year':1
+}
+)
+```
+
 
 Show all the listings not from Brazil or Canada
 
