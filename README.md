@@ -363,3 +363,227 @@ db.animals.updateMany({
     }
 })
 ```
+
+
+## Delete documents
+```
+db.students.remove({
+    '_id':ObjectId('60a4c7af5baac29f72a7e20d')
+});
+```
+
+Use `deleteMany` to delete more than one
+
+# Embedded Documents
+
+Create a new animal with a checkup array
+```
+db.animals.insertMany([
+    {
+        'name':'Snoopy',
+        'age':2,
+        'breed':'Beagle',
+        'species':'Dog',
+        'checkups':[]
+    },
+    {
+        'name':'Garfield',
+        'age':7,
+        'breed':'Orange Tabby',
+        'species':'Cat',
+        'checkups': [
+            {
+                "_id":ObjectId(),
+                "name":"Dr. Chua",
+                "diagnosis":"Heartworms",
+                "treatment":"Steriods"
+            }
+        ]
+    }
+])
+```
+
+## Adding a new sub-document
+
+We use `$push` to add a new element to an array of sub-documents. When we
+work with a sub-document (or an embedded document), we always need to
+find the parent document first.
+
+```
+db.animals.update({
+    '_id':ObjectId("60a4c1cc5baac29f72a7e209")
+},{
+    '$push': {
+        'checkups': {
+            '_id': ObjectId(),
+            'name': 'Dr Tan',
+            'diagnosis':'Diabetes',
+            'treatment':'Medication'
+        }
+    }
+})
+```
+
+
+## Updating a sub document
+1. We must select the parent document
+2. Then select the sub-document
+```
+/* Find the document where it has inside the checkups array, an embedded
+document with the specified ID */
+db.animals.update({
+    'checkups': {
+        '$elemMatch': {
+            '_id': ObjectId('60a5c94647931af49358dfdf')
+        }
+    }
+}, {
+    '$set':{
+        'checkups.$.name':'Dr Su',
+        'checkups.$.diagnosis':'Diaherra',
+        'checkups.$.date':ISODate()
+    }
+})
+
+```
+* `$set` will always be from the p.o.v of the main document
+
+
+The shorthand method is:
+
+```
+/* Find the main document where its checkups array contains an _id of whatever is specfied */
+db.animals.update({
+    'checkups._id':ObjectId('60a5c94647931af49358dfdf')
+}, {
+    '$set':{
+        'checkups.$.date':ISODate('2021-05-20')
+    }
+})
+```
+
+
+## Add a string to an array
+
+Add the tag "good with cats" to Fluffy the Golden Retriever
+
+1. Find a way to select the main document
+2. Modify the array using `$set`
+
+```
+db.animals.update({
+    '_id':ObjectId('60a4c1cc5baac29f72a7e209')
+},{
+    '$push':{
+        'tags': "good with cats"
+    }
+})
+```
+
+## Removing an element from an array in Mongo
+
+It's still considered as an update.
+
+```
+db.animals.update({
+    'checkups._id':ObjectId('60a5c94647931af49358dfdf')
+},{
+    '$pull':{
+        'checkups': {
+            '_id':ObjectId('60a5c94647931af49358dfdf')
+        }
+    }
+})
+```
+
+To remove an array of single value
+
+```
+db.animals.update({
+    '_id':ObjectId('60a4c1cc5baac29f72a7e209')
+},{
+    '$pull':{
+        'tags': {
+            "$in":["good with children"]
+        }
+    }
+})
+```
+
+Alternatively:
+
+```
+db.animals.update({
+    "_id":ObjectId("60a4c1cc5baac29f72a7e209")
+},{
+    '$pull':{
+        'tags':'good with cats'
+    }
+})
+```
+
+1. Select the main document via the first parameter
+2. Specify what to pull
+
+## Only show a subset of the sub-documents
+
+For instance: show only transactions with the `buy` transaction_code
+```
+db.transactions.find({
+    'transactions.transaction_code':'buy'
+},{
+    'transactions': {
+        '$elemMatch': {
+            'transaction_code':'buy'
+        }
+    }
+}).pretty();
+```
+
+Suppose Muffin the Cat has the following checkups:
+
+```
+db.animals.update({
+    "_id":ObjectId('60a4c2eb5baac29f72a7e20a')
+}, {
+    '$set': {
+        'checkups': [
+            {
+                '_id':ObjectId(),
+                'name':'Dr Chua',
+                'diagnosis':'Cancer',
+                'treatment':'Medication'
+            },
+            {
+                '_id':ObjectId(),
+                'name':'Dr Su',
+                'diagnosis':'Heartworms',
+                'treatment':'Steriod'
+            },
+            {
+                '_id':ObjectId(),
+                'name':'Dr Tan',
+                'diagnosis':'Skin allegries',
+                'treatment':'Gel'
+            }
+        ]
+    }
+})
+```
+
+## Showing a subset of embedded documents
+Find all the animals that have Heartworms and display the checkups where they
+were diagnosised with Heartworms
+
+```
+db.animals.find({
+    'checkups.diagnosis':'Heartworms'
+},{
+    'name':1,
+    'checkups': {
+        '$elemMatch':{
+            'diagnosis':'Heartworms'
+        }
+    }
+})
+```

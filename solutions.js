@@ -78,3 +78,14 @@ db.inspections.find({
 db.inspections.find({
     'address.city': 'NEW YORK'
 }).count()
+
+// match ridgewood
+
+db.inspections.find({
+    'result': {
+        '$ne':'Violation Issued'
+    },
+    'address.city':"RIDGEWOOD"
+}).count()
+
+

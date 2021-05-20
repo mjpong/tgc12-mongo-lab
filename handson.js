@@ -1,5 +1,5 @@
 //fake_school
-use fake_school
+use fake_school;
 
 db.students.insertMany([
     {
@@ -74,3 +74,19 @@ db.students.update({
         ],
         'date_enrolled': ISODate('2016-05-13')
 },)
+
+
+// Show the items sold from the stores at Denver and Seattle
+db.sales.find({
+    '$or':[
+        {
+            'storeLocation':'Denver'
+        },
+        {
+            'storeLocation':'Seattle'
+        }
+    ]
+},{
+   'storeLocation':1,
+   'items':1
+}).pretty()
